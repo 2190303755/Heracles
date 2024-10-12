@@ -8,17 +8,22 @@ import earth.terrarium.heracles.common.network.NetworkHandler;
 import earth.terrarium.heracles.common.network.packets.quests.ServerboundUpdateQuestPacket;
 import earth.terrarium.heracles.common.network.packets.quests.data.NetworkQuestData;
 import earth.terrarium.heracles.common.utils.ModUtils;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.Util;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public class ClientQuests {
+    public static final ObjectOpenHashSet<String> COMPLETED_GROUPS = new ObjectOpenHashSet<>();
     private static final Map<String, QuestEntry> ENTRIES = new HashMap<>();
     private static final Map<String, ModUtils.QuestStatus> STATUS = new HashMap<>();
     private static final Map<String, List<QuestEntry>> BY_GROUPS = new HashMap<>();
     private static final List<String> GROUPS = new ArrayList<>();
 
     private static final Map<String, QuestProgress> PROGRESS = new HashMap<>();
+    private static CompletableFuture<Void> UPDATE_TASK;
 
     public static Optional<QuestEntry> get(String key) {
         return Optional.ofNullable(ENTRIES.get(key));
@@ -170,6 +175,16 @@ public class ClientQuests {
 
     public static void syncGroup(QuestsContent content) {
         STATUS.putAll(content.quests());
+        if (UPDATE_TASK != null && !UPDATE_TASK.isDone()) {
+            UPDATE_TASK.cancel(false);
+        }
+        UPDATE_TASK = CompletableFuture.runAsync(
+            () -> BY_GROUPS.entrySet().stream()
+                .filter(entry -> entry.getValue().stream().allMatch(
+                    quest -> STATUS.getOrDefault(quest.key(), ModUtils.QuestStatus.IN_PROGRESS).isComplete()
+                )).forEach(entry -> COMPLETED_GROUPS.add(entry.getKey())),
+            Util.backgroundExecutor()
+        );
     }
 
     public record QuestEntry(String key, Quest value, List<QuestEntry> dependencies, List<QuestEntry> dependents) {

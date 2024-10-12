@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 import earth.terrarium.heracles.Heracles;
 import earth.terrarium.heracles.api.client.theme.Theme;
+import earth.terrarium.heracles.client.DisplayNameMappings;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -23,6 +24,7 @@ public class ThemeHandler extends SimplePreparableReloadListener<Optional<Theme>
 
     @Override
     protected @NotNull Optional<Theme> prepare(ResourceManager manager, ProfilerFiller profiler) {
+        DisplayNameMappings.loadSync();
         return manager.getResource(THEME_LOCATION)
             .flatMap(resource -> {
                 try {

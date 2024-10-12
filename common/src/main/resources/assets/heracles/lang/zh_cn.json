@@ -66,8 +66,8 @@
     "gui.heracles.quests.edit_quest_settings": "编辑任务设置",
     "gui.heracles.quests.add_dependency": "添加依赖",
     "gui.heracles.quests.choose_background": "选择背景",
-    "gui.heracles.group.groups": "组",
-    "gui.heracles.group.create": "创建组",
+    "gui.heracles.group.groups": "任务组",
+    "gui.heracles.group.create": "创建任务组",
     "gui.heracles.group.delete": "包含任务时无法删除它",
     "gui.heracles.tools.move": "移动/选择[V]",
     "gui.heracles.tools.drag": "抓手/拖动工具[H]",
@@ -107,5 +107,9 @@
     "commands.heracles.resetall.success": "[Heracles] 任务重置成功。",
     "commands.heracles.pin.success.pinned": "[Heracles] 任务%s已固定。",
     "commands.heracles.pin.success.unpinned": "[Heracles] 任务%s已取消固定。",
-    "commands.heracles.pin.dummy.completed": "[Heracles] 任务%s已完成。"
+    "commands.heracles.pin.dummy.completed": "[Heracles] 任务%s已完成。",
+    "quest.heracles.dependencies_visible": "依赖项可见性",
+    "block.heracles.barrier": "屏障",
+    "commands.heracles.complete.success": "[Heracles] %s任务完成。",
+    "commands.heracles.complete.failed": "[Heracles] %s任务无法完成。"
 }

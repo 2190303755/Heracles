@@ -112,6 +112,7 @@ public class QuestsScreen extends AbstractQuestScreen<QuestsContent> {
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         super.renderLabels(graphics, mouseX, mouseY);
+        var font = this.font;
         int center = sideBarWidth / 2;
         int textX = center - font.width(ConstantComponents.Groups.GROUPS) / 2;
         graphics.drawString(
@@ -119,6 +120,10 @@ public class QuestsScreen extends AbstractQuestScreen<QuestsContent> {
             ConstantComponents.Groups.GROUPS, textX, 3, QuestsScreenTheme.getHeaderGroupsTitle(),
             false
         );
+        var entry = groupsList.getSelected();
+        if (entry == null) return;
+        var name = entry.displayName;
+        graphics.drawString(font, name, (width + sideBarWidth - font.width(name)) / 2, 3, QuestsScreenTheme.getHeaderGroupsTitle(), false);
     }
 
     public GroupsList getGroupsList() {

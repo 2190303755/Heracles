@@ -8,6 +8,7 @@ import com.teamresourceful.resourcefullib.client.screens.CursorScreen;
 import com.teamresourceful.resourcefullib.client.utils.CursorUtils;
 import com.teamresourceful.resourcefullib.client.utils.ScreenUtils;
 import earth.terrarium.heracles.api.client.theme.QuestsScreenTheme;
+import earth.terrarium.heracles.client.DisplayNameMappings;
 import earth.terrarium.heracles.client.handlers.ClientQuests;
 import earth.terrarium.heracles.client.screens.AbstractQuestScreen;
 import earth.terrarium.heracles.common.constants.ConstantComponents;
@@ -24,8 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class GroupsList extends SelectionList<GroupsList.Entry> {
+import static earth.terrarium.heracles.client.handlers.ClientQuests.COMPLETED_GROUPS;
 
+public class GroupsList extends SelectionList<GroupsList.Entry> {
+    private static double scrollAmount = 0.0;
     private final int width;
 
     public GroupsList(int x, int y, int width, int height, Consumer<@Nullable Entry> onSelection) {
@@ -36,11 +39,12 @@ public class GroupsList extends SelectionList<GroupsList.Entry> {
     @Override
     public void setSelected(@Nullable Entry entry) {
         if (!(Minecraft.getInstance().screen instanceof QuestsEditScreen screen) || !screen.isTemporaryWidgetVisible()) {
-            super.setSelected(entry);
+            this.internalSetSelected(entry);
         }
     }
 
     private void internalSetSelected(@Nullable Entry entry) {
+        scrollAmount = this.getScrollAmount();
         super.setSelected(entry);
     }
 
@@ -55,6 +59,7 @@ public class GroupsList extends SelectionList<GroupsList.Entry> {
             entries.add(entry);
         }
         updateEntries(entries);
+        this.setScrollAmount(scrollAmount);
         if (selectedEntry != null) {
             setSelected(selectedEntry);
         }
@@ -68,10 +73,12 @@ public class GroupsList extends SelectionList<GroupsList.Entry> {
 
         private final GroupsList list;
         private final String name;
+        public final String displayName;
 
         public Entry(GroupsList list, String name) {
             this.list = list;
             this.name = name;
+            this.displayName = DisplayNameMappings.MAPPING.getOrDefault(name, name);
         }
 
         @Override
@@ -82,7 +89,7 @@ public class GroupsList extends SelectionList<GroupsList.Entry> {
                 graphics.blitNineSliced(AbstractQuestScreen.HEADING, left, top, width, height, 5, 64, 20, 192, 55);
             }
             RenderSystem.disableBlend();
-            graphics.drawCenteredString(Minecraft.getInstance().font, name, left + width / 2, top + height / 2 - 4, QuestsScreenTheme.getGroupName());
+            graphics.drawCenteredString(Minecraft.getInstance().font, displayName, left + width / 2, top + height / 2 - 4, COMPLETED_GROUPS.contains(name) ? QuestsScreenTheme.getCompletedGroupName() : QuestsScreenTheme.getGroupName());
             CursorUtils.setCursor(hovered, CursorScreen.Cursor.POINTER);
             if (Minecraft.getInstance().screen instanceof QuestsEditScreen) {
                 if (mouseX - left >= width - 11 && mouseX - left <= width - 2 && mouseY - top >= 2 && mouseY - top <= 12 && hovered) {

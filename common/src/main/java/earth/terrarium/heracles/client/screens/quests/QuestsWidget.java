@@ -213,7 +213,6 @@ public class QuestsWidget extends BaseWidget {
         int x = this.x;
         int y = this.y;
         this.width = inspectorOpened.getAsBoolean() ? this.selectedWidth : this.fullWidth;
-
         try (var scissor = RenderUtils.createScissor(Minecraft.getInstance(), graphics, x, y, width, height)) {
             x += this.fullWidth / 2;
             y += this.height / 2;
@@ -308,9 +307,9 @@ public class QuestsWidget extends BaseWidget {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollAmount) {
         if (Screen.hasShiftDown()) {
-            offset.add((int) scrollAmount * 10, 0);
+            offset.add((int) scrollAmount * (Screen.hasControlDown() ? 25 : 10), 0);
         } else {
-            offset.add(0, (int) scrollAmount * 10);
+            offset.add(0, (int) scrollAmount * (Screen.hasControlDown() ? 25 : 10));
         }
         offset.set(-Mth.clamp(-offset.x(), minX, maxX), -Mth.clamp(-offset.y(), minY, maxY)); // Flip offset to use bounds properly (fix offset itself eventually)
         return true;
@@ -318,31 +317,44 @@ public class QuestsWidget extends BaseWidget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        MouseMode mode = this.mouseMode.get();
         lastClick = new Vector2i((int) mouseX, (int) mouseY);
         if (isMouseOver(mouseX, mouseY)) {
-            if (mode.canSelect() || mode.canOpen()) {
-                for (QuestWidget widget : this.widgets) {
-                    if (widget.isMouseOver(mouseX - (this.x + (this.fullWidth / 2f) + offset.x()), mouseY - (this.y + (this.height / 2f) + offset.y()))) {
-                        if (mode.canSelect()) {
-                            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                            this.selectHandler.clickQuest(mode, (int) mouseX, (int) mouseY, widget);
-                        } else if (mode.canOpen()) {
-                            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                            NetworkHandler.CHANNEL.sendToServer(new OpenQuestPacket(
-                                this.group, widget.id(), Minecraft.getInstance().screen instanceof QuestsEditScreen
-                            ));
-                        }
-                        return true;
-                    }
-                }
-            }
             this.selectHandler.release();
             start.set((int) mouseX, (int) mouseY);
             startOffset.set(offset.x(), offset.y());
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 1 || !isMouseOver(mouseX, mouseY)) return false;
+        if (lastClick != null) {
+            double deltaX = mouseX - lastClick.x;
+            double deltaY = mouseY - lastClick.y;
+            if (deltaX * deltaX + deltaY * deltaY > 4) return false;
+        }
+        MouseMode mode = this.mouseMode.get();
+        if (mode.canSelect() || mode.canOpen()) {
+            double x = mouseX - (this.x + offset.x() + (this.fullWidth / 2f));
+            double y = mouseY - (this.y + offset.y() + (this.height / 2f));
+            for (QuestWidget widget : this.widgets) {
+                if (widget.isMouseOver(x, y)) {
+                    if (mode.canSelect()) {
+                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                        this.selectHandler.clickQuest(mode, (int) mouseX, (int) mouseY, widget);
+                    } else if (mode.canOpen()) {
+                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                        NetworkHandler.CHANNEL.sendToServer(new OpenQuestPacket(
+                            this.group, widget.id(), Minecraft.getInstance().screen instanceof QuestsEditScreen
+                        ));
+                    }
+                    return true;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
